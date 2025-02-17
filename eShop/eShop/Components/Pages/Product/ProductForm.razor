@@ -1,0 +1,117 @@
+﻿@using eShop.Core.Model.Request
+@inject IProductService ProductService;
+@rendermode InteractiveAuto
+@inject NavigationManager Navigation
+
+<section>
+    <div class="row">
+        <EditForm Enhance="true" FormName="AddOrEditCustomerForm" EditContext="@editContext" OnValidSubmit="AddOrEditProduct">
+            <DataAnnotationsValidator />
+            <h3>
+                @Title
+            </h3>
+            <input type="hidden" name="Product.Id" value="@Product.Id" />
+            <div class="form-group row mb-3">
+                <label class="col-md-2 col-form-label">Title: <span class="text-danger">*</span></label>
+                <div class="col-md-10">
+                    <TextInput @bind-Value="@Product.Title" Placeholder="Title" />
+                    <ValidationMessage For="@(() => Product.Title)" />
+                </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-md-2 col-form-label">Description: <span class="text-danger">*</span></label>
+                <div class="col-md-10">
+                    <TextInput @bind-Value="@Product.Description" Placeholder="Description" />
+                    <ValidationMessage For="@(() => Product.Description)" />
+                </div>
+            </div>
+            <div class="form-group row mb-3">
+                <label class="col-md-2 col-form-label">Last Name: <span class="text-danger">*</span></label>
+                <div class="col-md-10">
+                    <CurrencyInput TValue="decimal?" Value="Product.Price" Locale="en-US" ShowCurrencySymbol="true" ValueExpression="() => Product.Price" ValueChanged="(value) => PriceChanged(value)" Placeholder="Enter price" />
+                    <ValidationMessage For="@(() => Product.Price)" />
+                </div>
+            </div>
+            <div class="form-group row mb-3">
+                <label class="col-md-2 col-form-label">ImageUrl: <span class="text-danger">*</span></label>
+                <div class="col-md-10">
+                    <TextInput @bind-Value="@Product.ImageUrl" Placeholder="ImageUrl" />
+                    <ValidationMessage For="@(() => Product.ImageUrl)" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 text-right">
+                    <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="ResetForm">Reset</Button>
+                    <Button Type="ButtonType.Submit" Color="ButtonColor.Success" Loading="@IsLoading" LoadingText="Saving..." Class="float-end me-2">Submit</Button>
+                </div>
+            </div>
+
+        </EditForm>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public bool IsEditMode { get; set; } = false;
+
+    [Parameter]
+    public int ProductId { get; set; }
+
+    [Parameter]
+    public EventCallback<ProductFormModel> OnValidProductSubmit { get; set; }
+
+    [SupplyParameterFromForm]
+    public ProductFormModel Product { get; set; } = new()!;
+
+    private string Title => IsEditMode ? "Edit Product" : "Add New Product";
+
+    private EditContext? editContext;
+
+    private bool IsLoading = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsEditMode)
+        {
+            var product = await ProductService.GetProductByIdAsync(ProductId);
+
+            Product = new ProductFormModel
+                {
+                    Description = product.Description,
+                    Id = product.Id,
+                    ImageUrl = product.ImageUrl,
+                    Price = product.Price,
+                    Title = product.Title
+                };
+        }
+        else
+        {
+            Product ??= new();
+        }
+
+        editContext = new EditContext(Product);
+    }
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(new ProductFormModel());
+        base.OnInitialized();
+    }
+    private async Task AddOrEditProduct()
+    {
+        IsLoading = true;
+        await OnValidProductSubmit.InvokeAsync(Product);
+        IsLoading = false;
+    }
+
+    private void ResetForm()
+    {
+        Product = new();
+        editContext = new EditContext(Product);
+    }
+    private void PriceChanged(decimal? value)
+    {
+        Product.Price = value;
+    }
+}

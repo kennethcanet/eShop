@@ -1,0 +1,71 @@
+﻿@page "/product"
+@inject IProductService ProductService;
+@rendermode InteractiveAuto
+@inject NavigationManager Navigation
+<section>
+    <div class="container px-4 px-lg-5 mt-5">
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
+            <h3>Product Admin</h3>
+        </div>
+        <Button Type="ButtonType.Link" To="/AddProduct"  Color="ButtonColor.Primary" Size="ButtonSize.Small"> Add Product </Button>
+        <div class="row mt-1">
+            <Grid @ref="grid"
+                Class="table table-hover table-bordered table-striped"
+                TItem="ProductResponse"
+                DataProvider="ProductDataProvider"
+                AllowPaging="true"
+                PageSize="5"
+                Responsive="true">
+
+                <GridColumns>
+                    <GridColumn TItem="ProductResponse" HeaderText="Id" PropertyName="Id">
+                        @context.Id
+                    </GridColumn>
+                    <GridColumn TItem="ProductResponse" HeaderText="Title" PropertyName="Title">
+                        @context.Title
+                    </GridColumn>
+                    <GridColumn TItem="ProductResponse" HeaderText="Description" PropertyName="Description">
+                        @context.Description
+                    </GridColumn>
+                    <GridColumn TItem="ProductResponse" HeaderText="Price" PropertyName="Price">
+                        @context.Price
+                    </GridColumn>
+                    <GridColumn TItem="ProductResponse" PropertyName="Action" Filterable="false" Sortable="false">
+                        <HeaderContent>
+                            Action
+                        </HeaderContent>
+                        <ChildContent>
+                            <Tooltip Title="Edit" role="button">
+                                <Icon Name="IconName.Pencil" @onclick="@(()=>EditProduct(context.Id))"></Icon>
+                            </Tooltip>
+                            
+                            <Tooltip Title="Delete" role="button" Class="ms-1">
+                                <Icon Name="IconName.Trash" @onclick="@(()=>DeleteProduct(context.Id))"></Icon>
+                            </Tooltip>
+                        </ChildContent>
+                    </GridColumn>
+                </GridColumns>
+            </Grid>
+        </div>
+    </div>
+</section>
+@code {
+    Grid<ProductResponse> grid = default!;
+    private List<ProductResponse> Products = new();
+
+    private async Task<GridDataProviderResult<ProductResponse>> ProductDataProvider(GridDataProviderRequest<ProductResponse> request)
+    {
+        Products = await ProductService.GetAllAsync();
+        return await Task.FromResult(request.ApplyTo(Products));
+    }
+
+    private void EditProduct(int id)
+    {
+        Navigation.NavigateTo($"/product/{id}");
+    }
+    private async Task DeleteProduct(int id)
+    {
+        await ProductService.DeleteProductByIdAsync(id);
+        await grid.RefreshDataAsync();
+    }
+}

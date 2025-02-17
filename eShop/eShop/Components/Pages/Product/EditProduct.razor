@@ -1,0 +1,35 @@
+﻿@page "/product/{id:int}"
+@using eShop.Core.Model.Request
+@inject IProductService ProductService;
+@rendermode InteractiveAuto
+@inject NavigationManager Navigation
+
+<section>
+    <div class="container px-4 px-lg-5 mt-5">
+        <div class="row">
+            <ProductForm IsEditMode="true" ProductId="@Id" OnValidProductSubmit="EditProductAsync" />
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private async Task EditProductAsync(ProductFormModel product)
+    {
+        var entity = new ProductRequest
+            {
+                Id = product.Id,
+                Title = product?.Title ?? string.Empty,
+                Description = product?.Description ?? string.Empty,
+                ImageUrl = product?.ImageUrl ?? string.Empty,
+                Price = product?.Price ?? 0m
+
+            };
+
+        await ProductService.EditProductAsync(entity);
+
+        Navigation.NavigateTo("/product");
+    }
+}

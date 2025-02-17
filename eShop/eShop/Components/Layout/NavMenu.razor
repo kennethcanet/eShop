@@ -1,0 +1,41 @@
+﻿@inject BasketState BasketState
+@implements IDisposable
+@inject IJSRuntime JS
+
+<nav class="navbar navbar-expand-lg navbar-light ">
+    <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="/">Blazor</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item"><a class="nav-link active" aria-current="page" href="">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/Product">Product Admin</a></li>
+            </ul>
+            <form class="d-flex">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="bi-cart-fill me-1"></i>
+                    Cart
+                    <span class="badge bg-primary text-white ms-1 rounded-pill">@BasketState.Count()</span>
+                </button>
+            </form>
+            <div class="ms-2">
+                <ThemeSwitcher Position="DropdownMenuPosition.End" OnThemeChanged="OnThemeChanged" />
+            </div>
+        </div>
+        
+    </div>
+</nav>
+@code {
+    protected override void OnInitialized()
+    {
+        BasketState.OnChange += StateHasChanged;
+    }
+    public void Dispose()
+    {
+        BasketState.OnChange -= StateHasChanged;
+    }
+    private async Task OnThemeChanged(string themeName)
+    {
+        await JS.InvokeVoidAsync("themeManager.setTheme", themeName);
+    }
+}
